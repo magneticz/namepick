@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/magneticz/namepick/domains"
 	p "github.com/magneticz/namepick/platforms"
-	"github.com/magneticz/namepick/platforms/domains"
 	_ "github.com/magneticz/namepick/platforms/github"
 	_ "github.com/magneticz/namepick/platforms/instagram"
 	_ "github.com/magneticz/namepick/platforms/reddit"
@@ -13,6 +13,8 @@ import (
 
 func main() {
 	name := "magnetic"
+
+	fmt.Println("PLATFORMS")
 
 	for key, platforms := range p.Platforms {
 		result, err := platforms.Check(name)
