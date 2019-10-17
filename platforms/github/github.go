@@ -3,6 +3,7 @@ package github
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/magneticz/namepick/platforms"
 )
@@ -24,20 +25,21 @@ func assignToMap(p platforms.Platform) {
 }
 
 // Check returns a pointer to a new github instance
-func (g github) Check(username string) (bool, error) {
+func (g github) Check(username string, c chan platforms.CheckResult, w *sync.WaitGroup) {
+	defer w.Done()
+
+	result := platforms.CheckResult{Name: "github", Value: false}
 	data := githubResponse{}
 	url := fmt.Sprintf(rootURL, username)
 	body, err := platforms.GetData(url, nil)
 	if err != nil {
 		// handle error
 		fmt.Println("Error:>", err)
-		return false, err
 	}
 	json.Unmarshal(body, &data)
 
-	if data.Login != "" {
-		return false, nil
-	}
+	result.Value = data.Login == ""
 
-	return true, nil
+	c <- result
+
 }

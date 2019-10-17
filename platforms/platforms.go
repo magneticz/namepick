@@ -4,14 +4,21 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 )
 
 //Platforms is a var
 var Platforms = make(map[string]Platform)
 
+// CheckResult is a struct for results of check
+type CheckResult struct {
+	Name  string
+	Value bool
+}
+
 // Platform is an interface
 type Platform interface {
-	Check(string) (bool, error)
+	Check(string, chan CheckResult, *sync.WaitGroup)
 }
 
 // GetData gets data
