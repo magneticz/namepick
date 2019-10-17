@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/magneticz/namepick/domains"
 	p "github.com/magneticz/namepick/platforms"
+
 	_ "github.com/magneticz/namepick/platforms/github"
 	_ "github.com/magneticz/namepick/platforms/instagram"
 	_ "github.com/magneticz/namepick/platforms/reddit"
@@ -13,21 +15,31 @@ import (
 
 func main() {
 	name := "magnetic"
+	platformsChannel := make(chan p.CheckResult)
+	var wg sync.WaitGroup
 
 	fmt.Println("PLATFORMS")
 
-	for key, platforms := range p.Platforms {
-		result, err := platforms.Check(name)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		fmt.Printf("%s:> %v\n", key, result)
+	for _, platform := range p.Platforms {
+		wg.Add(1)
+		go platform.Check(name, platformsChannel, &wg)
 	}
 
 	fmt.Println("DOMAINS")
 
 	for _, domain := range domains.Domains {
-		fmt.Printf("%s:> %v\n", domain, domains.Check(name, domain))
+		wg.Add(1)
+		go domains.Check(name, domain, platformsChannel, &wg)
 	}
+
+	for range p.Platforms {
+		result := <-platformsChannel
+		fmt.Printf("%s:> %v\n", result.Name, result.Value)
+	}
+
+	for range domains.Domains {
+		result := <-platformsChannel
+		fmt.Printf("%s:> %v\n", result.Name, result.Value)
+	}
+	wg.Wait()
 }

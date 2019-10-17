@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/magneticz/namepick/platforms"
 )
@@ -35,21 +36,24 @@ func assignToMap(p platforms.Platform) {
 }
 
 // Check checks if username exists in twitters
-func (i instagram) Check(username string) (bool, error) {
+func (i instagram) Check(username string, c chan platforms.CheckResult, w *sync.WaitGroup) {
+
+	defer w.Done()
+
+	result := platforms.CheckResult{Name: "instagram", Value: true}
 	data := instagramResponse{}
 	body, err := performCheckRequests(username)
 	if err != nil {
 		// handle error
 		fmt.Println("Error:>", err)
-		return false, err
+		result.Value = false
 	}
 
 	json.Unmarshal(body, &data)
-	if len(data.Errors.Username) > 0 && data.Errors.Username[0].Code != "username_is_taken" {
-		return false, nil
+	if len(data.Errors.Username) > 0 && data.Errors.Username[0].Code == "username_is_taken" {
+		result.Value = false
 	}
-
-	return true, nil
+	c <- result
 }
 
 func performCheckRequests(username string) ([]byte, error) {

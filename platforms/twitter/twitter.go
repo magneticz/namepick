@@ -3,6 +3,7 @@ package twitter
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/magneticz/namepick/platforms"
 )
@@ -28,17 +29,18 @@ func assignToMap(t platforms.Platform) {
 }
 
 // Check checks if username exists in twitters
-func (t twitter) Check(username string) (bool, error) {
+func (t twitter) Check(username string, c chan platforms.CheckResult, w *sync.WaitGroup) {
+	defer w.Done()
+	result := platforms.CheckResult{Name: "twitter", Value: false}
 	data := twitterResponse{}
 	url := fmt.Sprintf(rootURL, username)
 	body, err := platforms.GetData(url, nil)
 	if err != nil {
 		// handle error
 		fmt.Println("Error:>", err)
-		return false, err
 	}
 
 	json.Unmarshal(body, &data)
-
-	return data.Valid, nil
+	result.Value = data.Valid
+	c <- result
 }

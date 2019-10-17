@@ -2,6 +2,7 @@ package reddit
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/magneticz/namepick/platforms"
 )
@@ -20,7 +21,10 @@ func assignToMap(p platforms.Platform) {
 var rootURL = "https://www.reddit.com/api/username_available.json?user=%s"
 
 // Check checks if username exists in twitters
-func (r *reddit) Check(username string) (bool, error) {
+func (r *reddit) Check(username string, c chan platforms.CheckResult, w *sync.WaitGroup) {
+
+	defer w.Done()
+	result := platforms.CheckResult{Name: "reddit", Value: false}
 	url := fmt.Sprintf(rootURL, username)
 	headers := map[string]string{
 		"user-agent": "Chrome/77.0.3865.90",
@@ -29,7 +33,8 @@ func (r *reddit) Check(username string) (bool, error) {
 	if err != nil {
 		// handle error
 		fmt.Println("Error:>", err)
-		return false, err
 	}
-	return string(body) == "true", nil
+	result.Value = string(body) == "true"
+	c <- result
+
 }

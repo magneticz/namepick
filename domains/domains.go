@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"sync"
 
 	"github.com/domainr/whois"
+	"github.com/magneticz/namepick/platforms"
 )
 
 type domains []struct {
@@ -24,22 +26,25 @@ func init() {
 }
 
 // Check domain name availability
-func Check(uname string, tld string) (isAvailable bool) {
+func Check(uname string, tld string, c chan platforms.CheckResult, w *sync.WaitGroup) {
+	defer w.Done()
+
 	domain := uname + "." + tld
+	result := platforms.CheckResult{Name: tld, Value: false}
 	req, err := whois.NewRequest(domain)
 	if err != nil {
-		return
+		fmt.Println("Error:>", err)
 	}
 
 	resp, err := whois.DefaultClient.Fetch(req)
 	if err != nil {
-		return
+		fmt.Println("Error:>", err)
 	}
 
 	t := fmt.Sprintf("%s", resp)
-	isAvailable = strings.Contains(t, domainsMap[tld])
+	result.Value = strings.Contains(t, domainsMap[tld])
 
-	return isAvailable
+	c <- result
 }
 
 func getDomainsConfig() {
