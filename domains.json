@@ -1,0 +1,26 @@
+[
+    {
+        "domain": "dev",
+        "notFound": "Domain not found"
+    },
+    {
+        "domain": "com",
+        "notFound": "No match for"
+    },
+    {
+        "domain": "io",
+        "notFound": "NOT FOUND"
+    },
+    {
+        "domain": "me",
+        "notFound": "NOT FOUND"
+    },
+    {
+        "domain": "co",
+        "notFound": "No Data Found"
+    },
+    {
+        "domain": "ai",
+        "notFound": "No Object Found"
+    }
+]
